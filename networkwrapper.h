@@ -3,11 +3,14 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QTimer>
 #include "json.h"
+
+#define ONE_MINUTES 60000
 
 struct MediaListItem
 {
-    QUrl aurl;
+    QString aurl;
     QUrl iurl;
     QString genre;
     QString artist;
@@ -23,29 +26,31 @@ class NetworkWrapper: public QObject
 public:
     NetworkWrapper( QObject *parent = 0 );
     virtual ~NetworkWrapper();
-    void update();
     void setLogin( const QString& login ) { mLogin = login; }
     void setPassword( const QString& password ) { mPassword = password; }
-    const QMediaList& getMediaList() { return mMediaList; }
-    void tokenize();
+    const QMediaList& mediaList() { return mMediaList; }
+    void login();
 
 signals:
     void loadedMedia();
 
-private:
-    void mediaList();
-    void parseMediaList( const QString& jsonAnswer );
-
 private slots:
     void received( QNetworkReply *reply );
+    void mediaUpdate();
 
 private:
+    void parseMediaList( const QString& jsonAnswer );
+    void load();
+
+private:
+    QTimer *mUpdateTimer;
     QString mLogin;
     QString mPassword;
     QString mToken;
+    QNetworkRequest *mMediaRequest;
+    QNetworkRequest *mAuthRequest;
 
     QMediaList mMediaList;
     QNetworkAccessManager *mNetworkManager;
-
 };
 

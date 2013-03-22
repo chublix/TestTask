@@ -4,22 +4,37 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network webkit
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui network widgets
 
 TARGET = TestTask
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
     networkwrapper.cpp \
-    json.cpp
+    json.cpp \
+    vlcwidget.cpp \
+    form.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
     networkwrapper.h \
-    json.h
+    json.h \
+    vlcwidget.h \
+    form.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    form.ui
+
+win32: INCLUDEPATH += $$PWD/vlc
+win32: DEPENDPATH += $$PWD/vlc
+
+#win32: LIBS += $$PWD/libvlccore.lib
+win32: LIBS += $$PWD/libvlc.lib
+
+unix: LIBS +=-llibvlc
+unix: INCLUDEPATH += /usr/include
+unix: DEPENDPATH += /usr/include
+
+
+
 

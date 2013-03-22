@@ -1,45 +1,44 @@
 #include "networkwrapper.h"
-#include <QRegExp>
-#include <QDebug>
 
 NetworkWrapper::NetworkWrapper( QObject *parent ):
     QObject( parent )
 {
+    mUpdateTimer = new QTimer( this ) ;
     mNetworkManager = new QNetworkAccessManager( parent );
     connect( mNetworkManager, SIGNAL( finished( QNetworkReply* ) )
             , this, SLOT( received( QNetworkReply* ) ) );
+
+    connect (mUpdateTimer, SIGNAL ( timeout() ), this, SLOT( mediaUpdate() ) );
 }
 
 NetworkWrapper::~NetworkWrapper()
 {
 }
 
-void NetworkWrapper::update()
+void NetworkWrapper::login()
 {
-    mediaList();
-}
+    QUrl authUrl( "http://vacancy.dev.telehouse-ua.net/auth/login?login="
+            + mLogin + "&password=" + mPassword );
 
+    mAuthRequest = new QNetworkRequest( authUrl );
 
-void NetworkWrapper::tokenize()
+    mNetworkManager->get( *mAuthRequest );
+
+    mUpdateTimer->start( 5 * ONE_MINUTES );
+ }
+
+void NetworkWrapper::load()
 {
-    QUrl url("http://vacancy.dev.telehouse-ua.net/auth/login?login="
-            + mLogin + "&password=" + mPassword);
-
-    mNetworkManager->get( QNetworkRequest( url ) );
-}
-
-void NetworkWrapper::mediaList()
-{
-    QUrl url( "http://vacancy.dev.telehouse-ua.net/media/list" );
-    QNetworkRequest request( url );
-    request.setHeader( QNetworkRequest::ContentTypeHeader, "application/json" );
+    QUrl mediaUrl( "http://vacancy.dev.telehouse-ua.net/media/list" );
+    mMediaRequest = new QNetworkRequest( mediaUrl );
+    mMediaRequest->setHeader( QNetworkRequest::ContentTypeHeader, "application/json" );
 
     //custom header
     QByteArray header( "X-Auth-Token" );
     QByteArray value( mToken.toStdString().c_str() );
-    request.setRawHeader( header, value );
+    mMediaRequest->setRawHeader( header, value );
 
-    mNetworkManager->get( request );
+    mNetworkManager->get( *mMediaRequest );
 }
 
 void NetworkWrapper::parseMediaList(const QString &jsonAnswer)
@@ -52,7 +51,7 @@ void NetworkWrapper::parseMediaList(const QString &jsonAnswer)
         QVariantMap fields = insideList.toMap();
 
         MediaListItem *media = new MediaListItem();
-        media->aurl = fields["aurl"].toUrl();
+        media->aurl = fields["aurl"].toString();
         media->iurl = fields["iurl"].toUrl();
         media->genre = fields["genre"].toString();
         media->artist = fields["artist"].toString();
@@ -66,14 +65,23 @@ void NetworkWrapper::parseMediaList(const QString &jsonAnswer)
 void NetworkWrapper::received( QNetworkReply *reply )
 {
     QString data = reply->readAll();
+    QVariantMap root = QtJson::parse( data ).toMap();
     if ( reply->error() == QNetworkReply::NoError )
     {
-        if ( data.size() > 64 )
+        if ( root["token"].isNull() )
             parseMediaList( data );
         else
         {
-            mToken = data.section("\"",-2,-2);
-            mediaList();
+            mToken = root["token"].toString();
+            load();
         }
     }
 }
+
+void NetworkWrapper::mediaUpdate()
+{
+   mNetworkManager->get( *mMediaRequest );
+   mMediaList.clear();
+}
+
+
