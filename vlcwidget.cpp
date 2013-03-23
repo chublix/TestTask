@@ -56,14 +56,13 @@ QVlcWidget::QVlcWidget( QWidget *parent ):
     mPoller = new QTimer( this );
     mWrapper = new NetworkWrapper( this );
 
-    libvlc_exception_init( &mVlcExcep );
-
 #if defined(Q_OS_WIN)
     //create a new libvlc instance
     mVlcInstance = libvlc_new(0,NULL);
     // Create a media player playing environement
     mMediaPlayer = libvlc_media_player_new ( mVlcInstance );
 #else
+    libvlc_exception_init( &mVlcExcep );
     //create a new libvlc instance
     mVlcInstance = libvlc_new( 0, NULL, &mVlcExcep );
     raise( &mVlcExcep );
@@ -97,8 +96,12 @@ QVlcWidget::QVlcWidget( QWidget *parent ):
 
 QVlcWidget::~QVlcWidget()
 {
+#if defined(Q_OS_WIN)
+    libvlc_media_player_stop( mMediaPlayer );
+#else
     libvlc_media_player_stop( mMediaPlayer, &mVlcExcep );
     raise( &mVlcExcep );
+#endif
     libvlc_media_player_release( mMediaPlayer );
     libvlc_release( mVlcInstance );
 }
@@ -129,6 +132,7 @@ void QVlcWidget::fullScreen()
         showNormal();
 }
 
+#if !defined(Q_OS_WIN)
 void QVlcWidget::raise( libvlc_exception_t *ex )
 {
     if (libvlc_exception_raised (ex))
@@ -137,6 +141,7 @@ void QVlcWidget::raise( libvlc_exception_t *ex )
         exit (-1);
     }
 }
+#endif
 
 void QVlcWidget::mediaSelected( QListWidgetItem *item )
 {
@@ -194,7 +199,7 @@ void QVlcWidget::stopClicked()
     if ( mIsPlaying )
     {
         #if defined(Q_OS_WIN)
-            libvlc_media_player_stop( mMediaPlayer, &mVlcExcep );
+            libvlc_media_player_stop( mMediaPlayer );
         #else
             libvlc_media_player_stop( mMediaPlayer, &mVlcExcep );
             raise( &mVlcExcep );

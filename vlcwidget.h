@@ -16,7 +16,7 @@
     #include <QX11EmbedContainer>
 #endif
 
-#include <vlc.h>
+#include <vlc/vlc.h>
 
 #define POSITION_RESOLUTION 10000
 
