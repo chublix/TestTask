@@ -1,16 +1,22 @@
 #pragma once
 
 #include <QWidget>
-#include <vlc/vlc.h>
 #include <QBoxLayout>
 #include <QPushButton>
 #include <QTimer>
-#include <QFrame>
 #include <QSlider>
 #include <QListWidget>
 #include <QKeyEvent>
 #include "networkwrapper.h"
 #include "form.h"
+
+#if defined(Q_OS_WIN)
+    #include <QFrame>
+#else
+    #include <QX11EmbedContainer>
+#endif
+
+#include <vlc.h>
 
 #define POSITION_RESOLUTION 10000
 
@@ -22,7 +28,14 @@ class QVlcWidget : public QWidget
     QPushButton *mPauseButton;
     QSlider *mPositionSlider;
     QSlider *mVolumeSlider;
+
+#if defined(Q_OS_WIN)
     QFrame *mVideoWidget;
+#else
+    QX11EmbedContainer *mVideoWidget;
+    libvlc_exception_t mVlcExcep;
+#endif
+
     QTimer *mPoller;
 
     bool mIsPlaying;
@@ -41,6 +54,10 @@ protected:
 
 private:
     void fullScreen();
+
+#if !defined( Q_OS_WIN )
+    void raise( libvlc_exception_t * ex );
+#endif
 
 private slots:
     void mediaSelected( QListWidgetItem *item );
