@@ -62,13 +62,12 @@ QVlcWidget::QVlcWidget( QWidget *parent ):
     // Create a media player playing environement
     mMediaPlayer = libvlc_media_player_new ( mVlcInstance );
 #else
-    libvlc_exception_init( &mVlcExcep );
     //create a new libvlc instance
-    mVlcInstance = libvlc_new( 0, NULL, &mVlcExcep );
-    raise( &mVlcExcep );
+    mVlcInstance = libvlc_new( 0, NULL );
+    raise(  );
     // Create a media player playing environement
-    mMediaPlayer = libvlc_media_player_new ( mVlcInstance, &mVlcExcep );
-    raise( &mVlcExcep );
+    mMediaPlayer = libvlc_media_player_new ( mVlcInstance );
+    raise(  );
 #endif
 
     //connect the two sliders to the corresponding slots (uses Qt's signal / slots technology)
@@ -99,8 +98,8 @@ QVlcWidget::~QVlcWidget()
 #if defined(Q_OS_WIN)
     libvlc_media_player_stop( mMediaPlayer );
 #else
-    libvlc_media_player_stop( mMediaPlayer, &mVlcExcep );
-    raise( &mVlcExcep );
+    libvlc_media_player_stop( mMediaPlayer );
+    raise(  );
 #endif
     libvlc_media_player_release( mMediaPlayer );
     libvlc_release( mVlcInstance );
@@ -133,13 +132,8 @@ void QVlcWidget::fullScreen()
 }
 
 #if !defined(Q_OS_WIN)
-void QVlcWidget::raise( libvlc_exception_t *ex )
+void QVlcWidget::raise(  )
 {
-    if (libvlc_exception_raised (ex))
-    {
-        fprintf (stderr, "error: %s\n", libvlc_exception_get_message(ex));
-        exit (-1);
-    }
 }
 #endif
 
@@ -175,8 +169,8 @@ void QVlcWidget::pauseClicked()
         #if defined(Q_OS_WIN)
             libvlc_media_player_pause( mMediaPlayer );
         #else
-            libvlc_media_player_pause( mMediaPlayer, &mVlcExcep );
-            raise( &mVlcExcep );
+            libvlc_media_player_pause( mMediaPlayer );
+            raise(  );
         #endif
         mPauseButton->setText(" > ");
 
@@ -186,8 +180,8 @@ void QVlcWidget::pauseClicked()
         #if defined(Q_OS_WIN)
             libvlc_media_player_play( mMediaPlayer );
         #else
-            libvlc_media_player_play( mMediaPlayer, &mVlcExcep );
-            raise( &mVlcExcep );
+            libvlc_media_player_play( mMediaPlayer );
+            raise(  );
         #endif
         mPauseButton->setText("| |");
     }
@@ -201,8 +195,8 @@ void QVlcWidget::stopClicked()
         #if defined(Q_OS_WIN)
             libvlc_media_player_stop( mMediaPlayer );
         #else
-            libvlc_media_player_stop( mMediaPlayer, &mVlcExcep );
-            raise( &mVlcExcep );
+            libvlc_media_player_stop( mMediaPlayer );
+            raise(  );
         #endif
         mPositionSlider->setValue( 0 );
         mIsPlaying = false;
@@ -215,11 +209,11 @@ void QVlcWidget::playFile( QString file )
      mMedia = libvlc_media_new_location( mVlcInstance, file.toAscii() );
      libvlc_media_player_set_media( mMediaPlayer, mMedia );
 #else
-    mMedia = libvlc_media_new( mVlcInstance, file.toAscii(), &mVlcExcep );
-    raise( &mVlcExcep );
+    mMedia = libvlc_media_new_path( mVlcInstance, file.toAscii() );
+    raise(  );
 
-    libvlc_media_player_set_media( mMediaPlayer, mMedia, &mVlcExcep );
-    raise( &mVlcExcep );
+    libvlc_media_player_set_media( mMediaPlayer, mMedia );
+    raise(  );
  #endif
 
 #if defined(Q_OS_WIN)
@@ -228,11 +222,11 @@ void QVlcWidget::playFile( QString file )
 #elif defined(Q_OS_MAC)
     libvlc_media_player_set_nsobject( mMediaPlayer, mVideoWidget->winId() );
 #else //Linux
-    libvlc_media_player_set_xwindow( mMediaPlayer, mVideoWidget->winId(), &mVlcExcep );
-    raise( &mVlcExcep );
+    libvlc_media_player_set_xwindow( mMediaPlayer, mVideoWidget->winId() );
+    raise(  );
 
-    libvlc_media_player_play( mMediaPlayer, &mVlcExcep );
-    raise( &mVlcExcep );
+    libvlc_media_player_play( mMediaPlayer );
+    raise(  );
 #endif
 
      mIsPlaying = true;
@@ -248,8 +242,8 @@ void QVlcWidget::updateInterface()
     #if defined(Q_OS_WIN)
         libvlc_media_t *curMedia = libvlc_media_player_get_media( mMediaPlayer );
     #else
-        libvlc_media_t *curMedia = libvlc_media_player_get_media( mMediaPlayer, &mVlcExcep );
-        raise( &mVlcExcep );
+        libvlc_media_t *curMedia = libvlc_media_player_get_media( mMediaPlayer );
+        raise(  );
     #endif
     if (curMedia == NULL)
         return;
@@ -257,8 +251,8 @@ void QVlcWidget::updateInterface()
     #if defined(Q_OS_WIN)
         float pos = libvlc_media_player_get_position( mMediaPlayer );
     #else
-        float pos = libvlc_media_player_get_position ( mMediaPlayer, &mVlcExcep );
-        raise( &mVlcExcep );
+        float pos = libvlc_media_player_get_position ( mMediaPlayer );
+        raise(  );
     #endif
 
 
@@ -269,8 +263,8 @@ void QVlcWidget::updateInterface()
 #if defined(Q_OS_WIN)
     int volume = libvlc_audio_get_volume( mMediaPlayer );
 #else
-    int volume = libvlc_audio_get_volume( mVlcInstance, &mVlcExcep );
-    raise( &mVlcExcep );
+    int volume = libvlc_audio_get_volume( mMediaPlayer );
+    raise(  );
 #endif
 
     mVolumeSlider->setValue( volume );
@@ -278,34 +272,19 @@ void QVlcWidget::updateInterface()
 
 void QVlcWidget::changeVolume( int newVolume )
 {
-#if defined(Q_OS_WIN)
     libvlc_audio_set_volume( mMediaPlayer, newVolume );
-#else
-    libvlc_audio_set_volume( mVlcInstance, newVolume, &mVlcExcep );
-    raise( &mVlcExcep );
-#endif
 }
 
 void QVlcWidget::changePosition( int newPosition )
 {
-#if defined(Q_OS_WIN)
     libvlc_media_t *curMedia = libvlc_media_player_get_media( mMediaPlayer );
-#else
-    libvlc_media_t *curMedia = libvlc_media_player_get_media( mMediaPlayer, &mVlcExcep );
-    raise( &mVlcExcep );
-#endif
 
     if ( curMedia == NULL )
         return;
 
     float pos = (float)(newPosition) / (float)POSITION_RESOLUTION;
 
-#if defined(Q_OS_WIN)
     libvlc_media_player_set_position( mMediaPlayer, pos );
-#else
-    libvlc_media_player_set_position( mMediaPlayer, pos, &mVlcExcep );
-    raise( &mVlcExcep );
-#endif
 }
 
 void QVlcWidget::loadedMedia()

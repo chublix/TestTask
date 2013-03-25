@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network widgets
+QT       += core gui network
 
 TARGET = TestTask
 TEMPLATE = app
@@ -25,17 +25,4 @@ HEADERS  += \
 FORMS    += \
     form.ui
 
-win32: LIBS += $$PWD/libvlc.lib
-win32: LIBS += $$PWD/libvlccore.lib
-win32: INCLUDEPATH += $$PWD/vlc2
-win32: DEPENDPATH += $$PWD/vlc2
-
-#unix: LIBS += -L$$PWD/libvlc.a
-
-
-unix: LIBS += -lvlc
-
-unix: INCLUDEPATH += $$PWD/vlc1/vlc
-unix: DEPENDPATH += $$PWD/vlc1/vlc
-
-unix: PRE_TARGETDEPS += $$PWD/libvlc.a
+LIBS += -lvlc

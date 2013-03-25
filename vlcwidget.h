@@ -33,7 +33,6 @@ class QVlcWidget : public QWidget
     QFrame *mVideoWidget;
 #else
     QX11EmbedContainer *mVideoWidget;
-    libvlc_exception_t mVlcExcep;
 #endif
 
     QTimer *mPoller;
@@ -55,9 +54,7 @@ protected:
 private:
     void fullScreen();
 
-#if !defined( Q_OS_WIN )
-    void raise( libvlc_exception_t * ex );
-#endif
+    void raise(  );
 
 private slots:
     void mediaSelected( QListWidgetItem *item );
